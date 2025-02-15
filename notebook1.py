@@ -26,7 +26,7 @@ else:
     st.warning("⚠️ Logo not found. Proceeding without displaying the logo.")
 
 # Model Upload
-uploaded_file = st.file_uploader("📂 Upload your trained ML model (ML_Model2.pkl)", type="pkl")
+uploaded_file = st.file_uploader("📂 D:\lab_ml\Model\ML_Model2.pkl", type="pkl")
 model = None
 if uploaded_file is not None:
     model = load_model(uploaded_file)
