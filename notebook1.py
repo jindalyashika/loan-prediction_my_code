@@ -6,7 +6,7 @@ import os
 
 # Load Model with Error Handling
 def load_model():
-    uploaded_file = st.file_uploader("📂 Upload your trained ML_Model2.pkl", type="pkl")
+    uploaded_file = st.file_uploader("📂 D:\lab_ml\Model\ML_Model2.pkl", type="pkl")
     if uploaded_file is not None:
         try:
             model = pickle.load(uploaded_file)
