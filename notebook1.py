@@ -2,18 +2,19 @@ import streamlit as st
 import pickle
 import os
 from PIL import Image
+import numpy as np
 
-# ✅ Step 1: Ensure scikit-learn is installed
+# ✅ Check for scikit-learn
 try:
     import sklearn
 except ModuleNotFoundError:
-    st.error("❌ Error: scikit-learn is not installed. Install it using `pip install scikit-learn`.")
+    st.error("❌ scikit-learn is not installed. Install it using `pip install scikit-learn`.")
     st.stop()
 
-# ✅ Step 2: Upload Model File
+# ✅ Upload Model File
 st.title("🏦 Bank Loan Prediction using Machine Learning")
 
-uploaded_file = st.file_uploader("📤 D:\lab_ml\Model\ML_Model2.pkl", type="pkl")
+uploaded_file = st.file_uploader("📤 Upload your trained `ML_Model2.pkl`", type="pkl")
 
 # Load model
 model = None
@@ -25,9 +26,8 @@ if uploaded_file is not None:
         st.error(f"❌ Error loading model: {e}")
         model = None
 
-# ✅ Step 3: Display Logo (with error handling)
+# ✅ Display Logo
 logo_path = r"D:\lab_ml\SBI-Logo.png"
-
 try:
     img = Image.open(logo_path)
     img = img.resize((156, 145))
@@ -35,7 +35,7 @@ try:
 except FileNotFoundError:
     st.warning("⚠️ Logo not found. Proceeding without displaying the logo.")
 
-# ✅ Step 4: Collect User Inputs
+# ✅ Collect User Inputs
 account_no = st.text_input('📌 Account Number')
 fn = st.text_input('👤 Full Name')
 
@@ -59,25 +59,31 @@ dur_mapping = {0: 60, 1: 180, 2: 240, 3: 360, 4: 480}
 dur = st.selectbox("⏳ Loan Duration", list(dur_mapping.keys()), format_func=lambda x: dur_display[x])
 duration = dur_mapping[dur]
 
-# ✅ Step 5: Submit and Predict
+# ✅ Submit and Predict
 if st.button("🚀 Submit"):
     if model is None:
         st.error("❌ No model loaded! Please upload a trained `ML_Model2.pkl` file.")
     else:
         # Prepare input for model
-        features = [[int(gen), int(mar), int(dep), int(edu), int(emp),
-                     float(mon_income), float(co_mon_income), float(loan_amt),
-                     int(duration), int(cred), int(prop)]]
+        features = np.array([[int(gen), int(mar), int(dep), int(edu), int(emp),
+                              float(mon_income), float(co_mon_income), float(loan_amt),
+                              int(duration), int(cred), int(prop)]])
 
-        # Make Prediction
-        prediction = model.predict(features)
-        ans = int(prediction[0])
+        st.write(f"🔎 Shape of input features: {features.shape}")  # Debugging
 
-        # Display Result
-        if ans == 0:
-            st.error(f"❌ Hello, {fn} (Account No: {account_no})\n\n"
-                     "Unfortunately, you **will NOT get the loan** based on our prediction.")
+        # Validate number of features
+        expected_features = model.n_features_in_
+        if features.shape[1] != expected_features:
+            st.error(f"❌ Feature mismatch! Model expects {expected_features} features, but received {features.shape[1]}.")
         else:
-            st.success(f"🎉 Hello, {fn} (Account No: {account_no})\n\n"
-                       "Congratulations! 🎊 You **will get the loan** based on our prediction.")
+            # Make Prediction
+            prediction = model.predict(features)
+            ans = int(prediction[0])
 
+            # Display Result
+            if ans == 0:
+                st.error(f"❌ Hello, {fn} (Account No: {account_no})\n\n"
+                         "Unfortunately, you **will NOT get the loan** based on our prediction.")
+            else:
+                st.success(f"🎉 Hello, {fn} (Account No: {account_no})\n\n"
+                           "Congratulations! 🎊 You **will get the loan** based on our prediction.")
