@@ -1,115 +1,94 @@
 import streamlit as st
-from PIL import Image
-import pickle
 import numpy as np
+import pickle
+from PIL import Image
+import os
 
-# Load Model with Error Handling
-def load_model():
-    uploaded_file = st.file_uploader("📂D:\lab_ml\Model\ML_Model2.pkl", type="pkl")
-    if uploaded_file is not None:
-        try:
+# Function to load the model safely
+def load_model(uploaded_file):
+    try:
+        if uploaded_file is not None:
             model = pickle.load(uploaded_file)
-            st.success("✅ Model loaded successfully!")
             return model
-        except Exception as e:
-            st.error(f"❌ Error loading model: {str(e)}")
+        else:
+            st.error("❌ No model loaded! Please upload a trained ML_Model2.pkl file.")
             return None
-    else:
-        st.warning("⚠ No model loaded! Please upload a trained ML_Model2.pkl file.")
+    except Exception as e:
+        st.error(f"❌ Error loading model: {e}")
         return None
 
-# Load Logo with Error Handling
-def load_logo():
-    try:
-        img = Image.open("SBI-Logo.png")
-        img = img.resize((156, 145))
-        st.image(img, use_column_width=False)
-    except FileNotFoundError:
-        st.warning("⚠ Logo not found. Proceeding without displaying the logo.")
-
-# Run the Streamlit App
+# Streamlit UI
 def run():
     st.title("🏦 Bank Loan Prediction using Machine Learning")
-    
-    # Display Logo
-    load_logo()
 
-    # Load the Model
-    model = load_model()
-    
+    # Load and display logo
+    logo_path = "D:/lab_ml/SBI-Logo.png"  # Update this path if necessary
+    if os.path.exists(logo_path):
+        img1 = Image.open(logo_path).resize((156, 145))
+        st.image(img1, use_column_width=False)
+    else:
+        st.warning("⚠️ Logo not found. Proceeding without displaying the logo.")
+
+    # Upload model file
+    uploaded_file = st.file_uploader("📂 D:\lab_ml\Model\ML_Model2.pkl", type="pkl")
+    model = load_model(uploaded_file)
+
+    # Ensure the model is loaded before proceeding
     if model is None:
-        return  # Stop execution if model isn't loaded
-    
-    # User Inputs
-    account_no = st.text_input('📌 Account Number')
-    fn = st.text_input('👤 Full Name')
+        return
 
-    # Categorical Inputs (Converted to Integers)
-    gen = st.selectbox("🧑‍🤝‍🧑 Gender", [0, 1], format_func=lambda x: ["Female", "Male"][x])
+    # User Inputs
+    account_no = st.text_input("📌 Account Number")
+    fn = st.text_input("🧑 Full Name")
+
+    # Dropdown selections for categorical features
+    gen = st.selectbox("👤 Gender", [0, 1], format_func=lambda x: ["Female", "Male"][x])
     mar = st.selectbox("💍 Marital Status", [0, 1], format_func=lambda x: ["No", "Yes"][x])
-    dep = st.selectbox("👨‍👩‍👧‍👦 Dependents", [0, 1, 2, 3], format_func=lambda x: ["No", "One", "Two", "More than Two"][x])
+    dep = st.selectbox("👶 Dependents", [0, 1, 2, 3], format_func=lambda x: ["No", "One", "Two", "More than Two"][x])
     edu = st.selectbox("🎓 Education", [0, 1], format_func=lambda x: ["Not Graduate", "Graduate"][x])
     emp = st.selectbox("💼 Employment Status", [0, 1], format_func=lambda x: ["Job", "Business"][x])
+    prop = st.selectbox("🏠 Property Area", [0, 1, 2], format_func=lambda x: ["Rural", "Semi-Urban", "Urban"][x])
     cred = st.selectbox("💳 Credit Score", [0, 1], format_func=lambda x: ["Between 300 to 500", "Above 500"][x])
-    prop = st.selectbox("🏡 Property Area", [0, 1, 2], format_func=lambda x: ["Rural", "Semi-Urban", "Urban"][x])
-
-    # Loan History (Previously Missing)
-    loan_history = st.selectbox("📜 Loan History", [0, 1], format_func=lambda x: ["No", "Yes"][x])
 
     # Numeric Inputs
-    mon_income = st.number_input("💰 Applicant's Monthly Income ($)", value=0, min_value=0)
-    co_mon_income = st.number_input("💰 Co-Applicant's Monthly Income ($)", value=0, min_value=0)
-    loan_amt = st.number_input("💵 Loan Amount", value=0, min_value=0)
+    mon_income = st.number_input("💰 Applicant's Monthly Income ($)", min_value=0)
+    co_mon_income = st.number_input("💰 Co-Applicant's Monthly Income ($)", min_value=0)
+    loan_amt = st.number_input("💵 Loan Amount", min_value=0)
 
-    # Loan Duration Mapping
-    dur_display = ['2 Months', '6 Months', '8 Months', '1 Year', '16 Months']
+    # Loan Duration Selection
+    dur_display = ["2 Months", "6 Months", "8 Months", "1 Year", "16 Months"]
     dur_mapping = {0: 60, 1: 180, 2: 240, 3: 360, 4: 480}
-    dur = st.selectbox("🕒 Loan Duration", list(dur_mapping.keys()), format_func=lambda x: dur_display[x])
+    dur = st.selectbox("⏳ Loan Duration", list(dur_mapping.keys()), format_func=lambda x: dur_display[x])
     duration = dur_mapping[dur]
 
     # Submit Button
-    if st.button("🚀 Predict Loan Approval"):
+    if st.button("🚀 Submit"):
+        # Prepare input for model
+        features = np.array([[gen, mar, dep, edu, emp, mon_income, co_mon_income, loan_amt, duration, cred, prop]])
+
+        # Check if model expects more features
+        expected_features = getattr(model, "n_features_in_", None)
+        if expected_features and features.shape[1] != expected_features:
+            st.error(f"❌ Feature mismatch! Model expects {expected_features} features, but received {features.shape[1]}.")
+            return
+
+        # Debugging Information
+        st.write("🛠 **Debug - Features going into the model:**")
+        st.dataframe(features)
+
+        # Make Prediction
         try:
-            # Prepare input for model (Now 12 Features!)
-            features = np.array([[int(gen), int(mar), int(dep), int(edu), int(emp), 
-                                  float(mon_income), float(co_mon_income), float(loan_amt), 
-                                  int(duration), int(cred), int(prop), int(loan_history)]])
-            
-            # Debugging: Check feature shape
-            expected_features = model.n_features_in_
-            if features.shape[1] != expected_features:
-                st.error(f"❌ Feature mismatch! Model expects {expected_features} features, but received {features.shape[1]}.")
-                return
-            
-            # Debugging: Print features before prediction
-            st.write("🛠 Debug - Features going into the model:", features)
-            
-            # Make Prediction
             prediction = model.predict(features)
-            
-            # Debugging: Print raw prediction output
-            st.write("🛠 Debug - Raw prediction output:", prediction)
-            
-            # Ensure prediction is not empty
-            if prediction is None or len(prediction) == 0:
-                st.error("❌ Error: Model returned an empty prediction.")
-                return
-            
-            # Convert prediction safely
-            ans = int(prediction[0]) if prediction[0] in [0, 1] else None
+            ans = int(prediction[0])
 
-            if ans is None:
-                st.error("❌ Error: Model returned an invalid value.")
-            elif ans == 0:
-                st.error(f"❌ Sorry, {fn} ({account_no}), you are NOT eligible for the loan.")
+            # Display Result
+            if ans == 0:
+                st.error(f"❌ Hello {fn} (Account No: {account_no}) – You will NOT get the loan from the bank.")
             else:
-                st.success(f"🎉 Congratulations, {fn} ({account_no})! You are eligible for the loan.")
-
-        except ValueError as ve:
-            st.error(f"❌ Value Error: {str(ve)}. Check if categorical values are properly encoded.")
+                st.success(f"🎉 Congratulations {fn} (Account No: {account_no}) – You WILL get the loan from the bank.")
         except Exception as e:
-            st.error(f"❌ Unexpected Error: {str(e)}")
+            st.error(f"❌ Error making prediction: {e}")
 
-# Run the app
+# Run the Streamlit app
 if __name__ == "__main__":
     run()
