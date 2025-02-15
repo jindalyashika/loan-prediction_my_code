@@ -1,20 +1,28 @@
 import streamlit as st
 from PIL import Image
 import pickle
+import io  # Required to handle file-like objects
 
 # Load the model from uploaded file
 uploaded_file = st.file_uploader("Upload your trained ML_Model2.pkl", type="pkl")
 model = None  # Initialize model as None
 
 if uploaded_file is not None:
-    model = pickle.load(uploaded_file)
+    try:
+        model = pickle.load(io.BytesIO(uploaded_file.read()))  # Read and load pickle file correctly
+        st.success("Model uploaded successfully!")
+    except Exception as e:
+        st.error(f"Error loading model: {e}")
 
 def run():
     # Load and display logo
-    img1 = Image.open(r'D:\lab_ml\SBI-Logo.png')
-    img1 = img1.resize((156, 145))
-    st.image(img1, use_column_width=True)
-    
+    try:
+        img1 = Image.open(r'D:\lab_ml\SBI-Logo.png')  # Make sure this path is correct
+        img1 = img1.resize((156, 145))
+        st.image(img1, use_column_width=True)
+    except Exception:
+        st.warning("Logo not found. Proceeding without displaying the logo.")
+
     st.title("Bank Loan Prediction using Machine Learning")
 
     # User Inputs
@@ -50,20 +58,23 @@ def run():
                         float(mon_income), float(co_mon_income), float(loan_amt),
                         int(duration), int(cred), int(prop)]]
 
-            # Make Prediction
-            prediction = model.predict(features)
-            ans = int(prediction[0])
+            try:
+                # Make Prediction
+                prediction = model.predict(features)
+                ans = int(prediction[0])
 
-            # Display Result
-            if ans == 0:
-                st.error(
-                    f"Hello: {fn} || Account Number: {account_no} || "
-                    "According to our calculations, you will NOT get the loan from the bank."
-                )
-            else:
-                st.success(
-                    f"Hello: {fn} || Account Number: {account_no} || "
-                    "Congratulations!! You will get the loan from the bank."
-                )
+                # Display Result
+                if ans == 0:
+                    st.error(
+                        f"Hello: {fn} || Account Number: {account_no} || "
+                        "According to our calculations, you will NOT get the loan from the bank."
+                    )
+                else:
+                    st.success(
+                        f"Hello: {fn} || Account Number: {account_no} || "
+                        "Congratulations!! You will get the loan from the bank."
+                    )
+            except Exception as e:
+                st.error(f"Prediction error: {e}")
 
 run()
