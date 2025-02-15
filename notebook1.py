@@ -79,15 +79,25 @@ def run():
             st.error(f"❌ Feature mismatch! Model expects {expected_features} features, but received {features.shape[1]}.")
             return
         
-        # Make Prediction
-        prediction = model.predict(features)
-        ans = int(prediction[0])
-
-        # Display Result
-        if ans == 0:
-            st.error(f"❌ Sorry, {fn} ({account_no}), you are NOT eligible for the loan.")
-        else:
-            st.success(f"🎉 Congratulations, {fn} ({account_no})! You are eligible for the loan.")
+        try:
+            # Make Prediction
+            prediction = model.predict(features)
+            
+            # Ensure prediction is not empty
+            if prediction is None or len(prediction) == 0:
+                st.error("❌ Error: Model returned an empty prediction.")
+                return
+            
+            ans = int(prediction[0])  # Convert prediction to integer safely
+            
+            # Display Result
+            if ans == 0:
+                st.error(f"❌ Sorry, {fn} ({account_no}), you are NOT eligible for the loan.")
+            else:
+                st.success(f"🎉 Congratulations, {fn} ({account_no})! You are eligible for the loan.")
+        
+        except Exception as e:
+            st.error(f"❌ Error making prediction: {str(e)}")
 
 # Run the app
 run()
