@@ -2,7 +2,6 @@ import streamlit as st
 from PIL import Image
 import pickle
 import os
-pip install scikit-learn
 
 # Function to load the model safely
 def load_model(uploaded_file):
