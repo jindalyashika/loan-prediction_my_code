@@ -50,6 +50,9 @@ def run():
     prop = st.selectbox("🏠 Property Area", [0, 1, 2], format_func=lambda x: ["Rural", "Semi-Urban", "Urban"][x])
     cred = st.selectbox("💳 Credit Score", [0, 1], format_func=lambda x: ["Between 300 to 500", "Above 500"][x])
 
+    # **🆕 Missing Feature Added: Self-Employed**
+    self_emp = st.selectbox("👔 Self Employed", [0, 1], format_func=lambda x: ["No", "Yes"][x])  # New Feature
+
     # Numeric Inputs
     mon_income = st.number_input("💰 Applicant's Monthly Income ($)", min_value=0)
     co_mon_income = st.number_input("💰 Co-Applicant's Monthly Income ($)", min_value=0)
@@ -63,8 +66,8 @@ def run():
 
     # Submit Button
     if st.button("🚀 Submit"):
-        # Prepare input for model
-        features = np.array([[gen, mar, dep, edu, emp, mon_income, co_mon_income, loan_amt, duration, cred, prop]])
+        # Prepare input for model (NOW 12 FEATURES!)
+        features = np.array([[gen, mar, dep, edu, emp, self_emp, mon_income, co_mon_income, loan_amt, duration, cred, prop]])
 
         # Check if model expects more features
         expected_features = getattr(model, "n_features_in_", None)
