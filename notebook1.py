@@ -30,7 +30,7 @@ def run():
         st.warning("⚠️ Logo not found. Proceeding without displaying the logo.")
 
     # Upload model file
-    uploaded_file = st.file_uploader("📂 D:\lab_ml\Model\ML_Model2.pkl", type="pkl")
+    uploaded_file = st.file_uploader("📂D:\lab_ml\Model\ML_Model2.pkl", type="pkl")
     model = load_model(uploaded_file)
 
     # Ensure the model is loaded before proceeding
@@ -82,7 +82,12 @@ def run():
         # Make Prediction
         try:
             prediction = model.predict(features)
-            ans = int(prediction[0])
+            ans = prediction[0]
+
+            # Fix: Handle cases where the model returns 'N' instead of a number
+            if isinstance(ans, str):
+                ans = 1 if ans.upper() == "Y" else 0
+            ans = int(ans)  # Convert to integer safely
 
             # Display Result
             if ans == 0:
