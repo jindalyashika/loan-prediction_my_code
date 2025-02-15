@@ -3,7 +3,10 @@ from PIL import Image
 import pickle
 
 # Load model
-model = pickle.load(open(r'D:\lab_ml\Model\ML_Model2.pkl', 'rb'))
+uploaded_file = st.file_uploader("Upload your trained ML_Model2.pkl", type="pkl")
+if uploaded_file is not None:
+    model = pickle.load(uploaded_file)
+
 
 def run():
     # Load and display logo
