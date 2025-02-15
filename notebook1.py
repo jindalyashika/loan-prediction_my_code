@@ -17,7 +17,7 @@ if uploaded_file is not None:
 def run():
     # Load and display logo
     try:
-        img1 = Image.open(r'D:\lab_ml\SBI-Logo.png  # Make sure this path is correct
+        img1 = Image.open(r'D:\lab_ml\SBI-Logo.png')  # Make sure this path is correct
         img1 = img1.resize((156, 145))
         st.image(img1, use_column_width=True)
     except Exception:
