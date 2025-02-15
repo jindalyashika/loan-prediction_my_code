@@ -5,7 +5,7 @@ import numpy as np
 
 # Load Model with Error Handling
 def load_model():
-    uploaded_file = st.file_uploader("📂 D:\lab_ml\Model\ML_Model2.pkl", type="pkl")
+    uploaded_file = st.file_uploader("📂D:\lab_ml\Model\ML_Model2.pkl", type="pkl")
     if uploaded_file is not None:
         try:
             model = pickle.load(uploaded_file)
@@ -71,4 +71,45 @@ def run():
     if st.button("🚀 Predict Loan Approval"):
         try:
             # Prepare input for model (Now 12 Features!)
-            features = np
+            features = np.array([[int(gen), int(mar), int(dep), int(edu), int(emp), 
+                                  float(mon_income), float(co_mon_income), float(loan_amt), 
+                                  int(duration), int(cred), int(prop), int(loan_history)]])
+            
+            # Debugging: Check feature shape
+            expected_features = model.n_features_in_
+            if features.shape[1] != expected_features:
+                st.error(f"❌ Feature mismatch! Model expects {expected_features} features, but received {features.shape[1]}.")
+                return
+            
+            # Debugging: Print features before prediction
+            st.write("🛠 Debug - Features going into the model:", features)
+            
+            # Make Prediction
+            prediction = model.predict(features)
+            
+            # Debugging: Print raw prediction output
+            st.write("🛠 Debug - Raw prediction output:", prediction)
+            
+            # Ensure prediction is not empty
+            if prediction is None or len(prediction) == 0:
+                st.error("❌ Error: Model returned an empty prediction.")
+                return
+            
+            # Convert prediction safely
+            ans = int(prediction[0]) if prediction[0] in [0, 1] else None
+
+            if ans is None:
+                st.error("❌ Error: Model returned an invalid value.")
+            elif ans == 0:
+                st.error(f"❌ Sorry, {fn} ({account_no}), you are NOT eligible for the loan.")
+            else:
+                st.success(f"🎉 Congratulations, {fn} ({account_no})! You are eligible for the loan.")
+
+        except ValueError as ve:
+            st.error(f"❌ Value Error: {str(ve)}. Check if categorical values are properly encoded.")
+        except Exception as e:
+            st.error(f"❌ Unexpected Error: {str(e)}")
+
+# Run the app
+if __name__ == "__main__":
+    run()
